@@ -1,0 +1,44 @@
+# THIS IS THE FILE THAT RUNS THE AUTOMATION. GitHub starts it every day by itself,
+# or when you click Actions > "Run Lead Bot" > Run workflow.
+name: Run Lead Bot
+on:
+  schedule:
+    - cron: "0 20 * * *"      # 20:00 UTC = 6-7am Sydney/Melbourne. Change if you like.
+  workflow_dispatch:           # the manual "Run workflow" button
+concurrency:
+  group: lead-bot
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run the bot
+        run: python src/leadbot.py
+        env:
+          # ===== MANDATORY (3 secrets) =====
+          GOOGLE_SA: ${{ secrets.GOOGLE_SA }}
+          SHEET_ID: ${{ secrets.SHEET_ID || vars.SHEET_ID }}
+          AI_API_KEYS: ${{ secrets.AI_API_KEYS }}
+          # ===== OPTIONAL: leave blank/unset = module switches itself off, no errors =====
+          HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
+          ZEROBOUNCE_API_KEY: ${{ secrets.ZEROBOUNCE_API_KEY }}
+          JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          APOLLO_API_KEY: ${{ secrets.APOLLO_API_KEY }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+          PLACES_API_KEYS: ${{ secrets.PLACES_API_KEYS }}
+          USE_JINA: ${{ vars.USE_JINA }}
+          # ===== RECOMMENDED variables (printed in the email footer) =====
+          SENDER_NAME: ${{ vars.SENDER_NAME }}
+          AGENCY_NAME: ${{ vars.AGENCY_NAME }}
+          SENDER_ADDRESS: ${{ vars.SENDER_ADDRESS }}
